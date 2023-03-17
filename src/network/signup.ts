@@ -26,6 +26,15 @@ export function confirmSignUp(signUpId: number) {
   })
 }
 
+export function rejectSignUp(signUpId: number) {
+  return requestInstance.post({
+    url: '/signup/reject',
+    data: {
+      signUpId,
+    },
+  })
+}
+
 export function getSignUpListByCompetitionId(
   competitionId: number,
   alreadyProcess: number,

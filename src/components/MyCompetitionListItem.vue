@@ -41,10 +41,18 @@
         </template>
       </div>
       <div class="confirm-btn" v-if="showConfirmBtn">
-        <el-button type="primary" @click.stop="handleConfirm">
+        <el-button
+          type="primary"
+          @click.stop="() => handleConfirmOrRejectSignUp('confirm')"
+        >
           确认参加
         </el-button>
-        <el-button type="danger">拒绝参加</el-button>
+        <el-button
+          type="danger"
+          @click.stop="() => handleConfirmOrRejectSignUp('reject')"
+        >
+          拒绝参加
+        </el-button>
       </div>
       <el-button
         v-else
@@ -88,7 +96,7 @@ import {
   CircleCloseFilled,
 } from '@element-plus/icons-vue'
 import type { Action } from 'element-plus'
-import { confirmSignUp } from '../network/signup'
+import { confirmSignUp, rejectSignUp } from '../network/signup'
 import {
   AlreadyProcess,
   KeyTagToContentType,
@@ -222,13 +230,16 @@ const goDetail = () => {
   })
 }
 
-const handleConfirm = () => {
-  ElMessageBox.alert('确认参加？', '确认参加该竞赛', {
+const handleConfirmOrRejectSignUp = (type: 'confirm' | 'reject') => {
+  const title = type === 'confirm' ? '确认参加？' : '确认拒绝？'
+  const content = type === 'confirm' ? '确认参加该竞赛' : '确认拒绝该邀请'
+  const requestFn = type === 'confirm' ? confirmSignUp : rejectSignUp
+  ElMessageBox.alert(title, content, {
     confirmButtonText: '确认',
     callback: (action: Action) => {
       if (action === 'confirm') {
-        confirmSignUp(props.signUpId).then(() => {
-          emitter.emit('reload-my-competition')
+        requestFn(props.signUpId).then(() => {
+          emitter.emit('reload-my-competition', ['confirmList'])
         })
       }
     },
@@ -236,8 +247,6 @@ const handleConfirm = () => {
 }
 
 const handleUpdateSignUp = () => {
-  console.log('--')
-
   updateVisible.value = true
 }
 </script>
