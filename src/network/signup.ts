@@ -35,6 +35,15 @@ export function rejectSignUp(signUpId: number) {
   })
 }
 
+export function deleteSignUp(signUpId: number) {
+  return requestInstance.post({
+    url: '/signup/delete',
+    data: {
+      signUpId,
+    },
+  })
+}
+
 export function getSignUpListByCompetitionId(
   competitionId: number,
   alreadyProcess: number,

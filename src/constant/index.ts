@@ -157,6 +157,7 @@ export const LabelToContent: { [key in LabelType]: string } = {
   instructoredList: '已指导',
   instructoringList: '指导中',
   judgementList: '我评判的',
+  releaseList: '我发布的',
 }
 
 export enum AlreadyProcess {

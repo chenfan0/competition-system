@@ -2,7 +2,7 @@
   <div class="el-tab-pane-item" v-if="listData.list.length">
     <template v-for="(item, index) in listData.list" :key="item.id">
       <MyCompetitionListItem
-        v-if="label !== 'judgementList'"
+        v-if="label !== 'judgementList' && label !== 'releaseList'"
         :class="index === listData.list.length - 1 ? 'last' : ''"
         :mode="item.mode"
         :sign-up-id="item.id"
@@ -42,6 +42,7 @@
         :sign-up-start-time="item.registrationEndTime"
         :status="item.status"
         :show-score-btn="true"
+        :is-op-user="item.opUser === user"
       />
     </template>
     <div class="pagination-wrapper">
@@ -64,11 +65,14 @@ import MyCompetitionListItem from './MyCompetitionListItem.vue'
 import { LabelToContent } from '@/constant'
 import { LabelType } from '@/type'
 import CompetitionItem from '@/components/CompetitionItem.vue'
+import { useUserStore } from '@/store/user.store'
 
 const props = defineProps<{
   label: LabelType
   filterCompetitionName: string
 }>()
+
+const user = useUserStore().userInfo.phone
 
 const listData = ref<{ list: any[]; count: number }>({
   list: [],

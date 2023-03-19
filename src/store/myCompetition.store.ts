@@ -11,10 +11,17 @@ type FieldType =
   | 'instructoredList'
   | 'instructoringList'
   | 'judgementList'
+  | 'releaseList'
 
 const RoleToTabPanelDataMap = {
   0: ['signUpedList', 'signUpingList', 'confirmList'],
-  1: ['instructoredList', 'instructoringList', 'confirmList', 'judgementList'],
+  1: [
+    'instructoredList',
+    'instructoringList',
+    'confirmList',
+    'judgementList',
+    'releaseList',
+  ],
 } as { [key: number]: FieldType[] }
 
 export const useMyCompetitionStore = defineStore('myCompetitionStore', () => {

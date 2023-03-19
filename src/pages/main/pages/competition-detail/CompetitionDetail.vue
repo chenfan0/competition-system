@@ -51,9 +51,9 @@
         type="primary"
         class="sign-up"
         size="large"
-        @click="handleSignUpOrUpload"
-        v-if="userStore.userInfo.role === UserRole.student"
+        @click="handleBtnClick"
         :disabled="competitionDetail.btnDisable"
+        v-if="shouldShowBtn"
       >
         {{ competitionDetail.btnMsg }}
       </el-button>
@@ -145,6 +145,7 @@ const signUpDialogVisible = ref(false)
 // 1 代表可以报名也可以上传或修改文件
 // 2 代表只能修改文件
 const canUpdateSignUpMode = ref<CanUpdateSignUpMode>(0)
+const shouldShowBtn = ref(userStore.userInfo.role === UserRole.student)
 
 const processCompetitionDetailData = (data: any) => {
   // 数据处理
@@ -165,6 +166,8 @@ const processCompetitionDetailData = (data: any) => {
   const canSignUp = registrationEndTime > now
   let btnDisable!: boolean
   let btnMsg!: string
+  const curUser = userStore.userInfo.phone
+  const { judges, opUser, leader } = data
   switch (data.status) {
     case CompetitionStatus.beforeSignUp:
       btnDisable = true
@@ -179,7 +182,7 @@ const processCompetitionDetailData = (data: any) => {
     case CompetitionStatus.uploading:
       canUpdateSignUpMode.value = canSignUp ? 1 : 2
       btnDisable = alreadySignUp
-        ? data.leader === userStore.userInfo.phone // 已经报名了，必须是报名队长才可以进行上传作品
+        ? leader === curUser // 已经报名了，必须是报名队长才可以进行上传作品
           ? false
           : true
         : canSignUp
@@ -192,6 +195,12 @@ const processCompetitionDetailData = (data: any) => {
       break
   }
   btnMsg = btnMsg ?? (alreadySignUp ? '上传作品' : '报名')
+
+  if (curUser === opUser || judges.includes(curUser)) {
+    btnMsg = '查看报名信息'
+    btnDisable = false
+    shouldShowBtn.value = true
+  }
 
   data.btnDisable = btnDisable
   data.btnMsg = btnMsg
@@ -212,8 +221,14 @@ const back = () => {
   router.back()
 }
 
-const handleSignUpOrUpload = () => {
-  signUpDialogVisible.value = true
+const handleBtnClick = () => {
+  if (userStore.userInfo.role === UserRole.student) {
+    signUpDialogVisible.value = true
+  } else {
+    router.push({
+      path: `/judge/${competitionDetail.value.id}`,
+    })
+  }
 }
 
 // const handleOnConfirmUpload = () => {}
@@ -258,6 +273,7 @@ const handleSignUpOrUpload = () => {
       font-size: 22px;
       color: #222;
       margin-bottom: 20px;
+      margin-top: 10px;
       line-height: 20px;
     }
 

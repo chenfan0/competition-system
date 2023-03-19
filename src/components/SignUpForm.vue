@@ -94,8 +94,10 @@
       </el-form-item>
       <el-form-item label="预览视频">
         <el-upload
+          v-model:file-list="videoFileList"
           :disabled="uploadDisable"
-          :action="BASE_URL + '/upload/video'"
+          name="video"
+          :action="BASE_URL + '/upload/signup/video'"
           :headers="uploadHeaders"
           :on-success="(response) => handleOnSuccess('video', response)"
           :on-error="handleOnError"
@@ -111,6 +113,16 @@
     </el-form>
 
     <template #footer>
+      <el-button
+        type="danger"
+        @click="handleDeleteSignUp"
+        :disabled="
+          (props.signUp && !isLeader) ||
+          canUpdateSignUpMode === CanUpdateSignUpMode.allDisable
+        "
+      >
+        删除
+      </el-button>
       <el-button
         type="primary"
         @click="handleConfirmSignUp"
@@ -134,7 +146,7 @@ import {
 } from '@/constant'
 import { getCompetitionUser } from '@/network/competition'
 import { useUserStore } from '@/store/user.store'
-import { createSignup, updateSignUpInfo } from '@/network/signup'
+import { createSignup, updateSignUpInfo, deleteSignUp } from '@/network/signup'
 import { emitter } from '@/utils/bus'
 import { downloadFile } from '@/utils'
 
@@ -265,6 +277,7 @@ const uploadHeaders = {
 }
 
 const workFile = JSON.parse(props.work ?? '{}')
+const videoFile = JSON.parse(props.video ?? '{}')
 const workFileList = computed(() => {
   const keys = Object.keys(workFile)
   if (keys.length === 0) {
@@ -274,6 +287,18 @@ const workFileList = computed(() => {
     {
       name: workFile.originalname,
       url: `${BASE_URL}/file/${workFile.filename}`,
+    },
+  ]
+})
+const videoFileList = computed(() => {
+  const keys = Object.keys(videoFile)
+  if (keys.length === 0) {
+    return []
+  }
+  return [
+    {
+      name: videoFile.originalname,
+      url: `${BASE_URL}/file/${videoFile.filename}`,
     },
   ]
 })
@@ -350,15 +375,33 @@ const handleConfirmSignUp = async () => {
   }
 }
 
+const handleDeleteSignUp = async () => {
+  ElMessageBox.confirm('确认删除当前报名?', '确认删除', {
+    confirmButtonText: '确认删除',
+    cancelButtonText: '取消删除',
+    type: 'warning',
+  }).then(() => {
+    deleteSignUp(props.singUpId!).then(() => {
+      emits('dialogClose')
+      emitter.emit(
+        'reload-my-competition',
+        role === UserRole.student
+          ? ['signUpedList', 'signUpingList']
+          : ['instructoredList', 'instructoringList'],
+      )
+    })
+  })
+}
+
 const handleOnSuccess = (type: 'work' | 'video', response: { data: any }) => {
   const fileData = JSON.stringify(response.data)
   signUpData.value[type] = fileData
 }
 
-const handleOnPreview: UploadProps['onPreview'] = (uploadFile) => {
+const handleOnPreview: UploadProps['onPreview'] = () => {
   ElMessageBox.confirm('是否要下载当前文件?', '确认下载', {
-    confirmButtonText: 'OK',
-    cancelButtonText: 'Cancel',
+    confirmButtonText: '下载',
+    cancelButtonText: '取消',
     type: 'warning',
   }).then(() => {
     downloadFile(workFile.filename, workFile.originalname)

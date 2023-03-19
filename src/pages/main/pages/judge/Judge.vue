@@ -3,7 +3,12 @@
     <img class="icon" src="@/assets/image/back.png" alt="back" @click="back" />
     <div class="header">
       竞赛名称:
-      {{ competitionDetail.name }}({{ competitionDetail.currentRound }})
+      {{ competitionDetail.name }}
+      ({{
+        competitionDetail.status === CompetitionStatus.end
+          ? '已结束'
+          : competitionDetail.currentRound
+      }})
     </div>
     <div class="rounds">
       竞赛轮次: {{ competitionDetail.rounds.join(' - ') }}
@@ -13,7 +18,11 @@
       <div class="current-count">入选本轮报名数量: {{ signUpCount }}</div>
     </div> -->
 
-    <el-tabs v-model="activeName" class="demo-tabs" v-if="isWaitResultStatus">
+    <el-tabs
+      v-model="activeName"
+      class="demo-tabs"
+      v-if="isWaitResultStatus && !isOpUser"
+    >
       <el-tab-pane label="待处理" name="raw" lazy>
         <JudgeItem
           :mode="competitionDetail.mode"
@@ -24,6 +33,7 @@
           :is-raw="true"
           :awards="competitionDetail.awards"
           :is-wait-result-status="isWaitResultStatus"
+          :is-op-user="isOpUser"
         />
       </el-tab-pane>
       <el-tab-pane label="已处理" name="process" lazy>
@@ -36,6 +46,7 @@
           :is-raw="false"
           :awards="competitionDetail.awards"
           :is-wait-result-status="isWaitResultStatus"
+          :is-op-user="isOpUser"
         />
       </el-tab-pane>
     </el-tabs>
@@ -49,12 +60,13 @@
       :is-raw="true"
       :awards="competitionDetail.awards"
       :is-wait-result-status="isWaitResultStatus"
+      :is-op-user="isOpUser"
     />
     <el-button
       class="next-btn"
       type="primary"
       @click="setNextRound"
-      v-if="isWaitResultStatus"
+      v-if="isWaitResultStatus && !isOpUser"
     >
       {{ isLastRound ? '公布结果' : `进入${nextRound}` }}
     </el-button>
@@ -68,9 +80,12 @@ import {
   setCompetitionNextRound,
 } from '@/network/competition'
 import { CompetitionStatus } from '@/constant'
+import { useUserStore } from '@/store/user.store'
 
 const router = useRouter()
 const route = useRoute()
+
+const userStore = useUserStore()
 
 const id = route.params.id as string
 const activeName = ref('raw')
@@ -81,6 +96,7 @@ const competitionDetail = ref<{
   mode: string
   awards: string[]
   status: number
+  opUser?: string
 }>({
   name: '',
   rounds: [],
@@ -89,6 +105,9 @@ const competitionDetail = ref<{
   awards: [],
   status: 0,
 })
+const isOpUser = computed(
+  () => userStore.userInfo.phone === competitionDetail.value.opUser,
+)
 const nextRound = computed(() => {
   const index = competitionDetail.value.rounds.indexOf(
     competitionDetail.value.currentRound,
@@ -110,13 +129,14 @@ const isWaitResultStatus = computed(
 )
 
 getCompetitionDetail(id).then((res) => {
-  const { currentRound, name, mode, rounds, awards, status } = res.data
+  const { currentRound, name, mode, rounds, awards, status, opUser } = res.data
   competitionDetail.value.currentRound = currentRound
   competitionDetail.value.name = name
   competitionDetail.value.mode = mode
   competitionDetail.value.rounds = rounds.split('\n')
   competitionDetail.value.awards = awards.split('\n')
   competitionDetail.value.status = status
+  competitionDetail.value.opUser = opUser
 })
 
 const back = () => {

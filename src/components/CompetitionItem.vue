@@ -21,10 +21,11 @@
         class="score-btn"
         type="primary"
         @click.stop="handleClickScore"
-        :disabled="status === CompetitionStatus.end"
       >
         {{
-          status === CompetitionStatus.waitResult ? '进入评判' : '查看报名信息'
+          status === CompetitionStatus.waitResult && !isOpUser
+            ? '进入评判'
+            : '查看报名信息'
         }}
       </el-button>
     </el-card>
@@ -50,6 +51,7 @@ const { title, level, address, signUpStartTime, signUpEndTime, status, id } =
     signUpEndTime: string
     status: number | string
     showScoreBtn?: boolean
+    isOpUser?: boolean
   }>()
 
 const goDetail = () => {

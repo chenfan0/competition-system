@@ -5,3 +5,4 @@ export type LabelType =
   | 'instructoredList'
   | 'instructoringList'
   | 'judgementList'
+  | 'releaseList'
