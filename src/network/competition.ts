@@ -7,6 +7,22 @@ export async function createCompetition(data: any) {
   })
 }
 
+export async function updateCompetition(data: any) {
+  return requestInstance.post({
+    url: '/competition/update',
+    data,
+  })
+}
+
+export async function deleteCompetition(id: number) {
+  return requestInstance.post({
+    url: '/competition/delete',
+    data: {
+      id,
+    },
+  })
+}
+
 export function getCompetitionList(
   offset = 0,
   size = 10,

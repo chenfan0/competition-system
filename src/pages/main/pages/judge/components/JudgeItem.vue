@@ -108,6 +108,7 @@ import {
 } from '@/network/signup'
 import { CompetitionMode, BASE_URL } from '@/constant'
 import { downloadFile } from '@/utils'
+import { emitter } from '@/utils/bus'
 
 const props = defineProps<{
   id: number
@@ -146,51 +147,62 @@ const signUpList = ref<
 
 const signUpCount = ref<number>(0)
 
-getSignUpListByCompetitionId(props.id, props.isRaw ? 0 : 1).then((res) => {
-  const data = res.data
-  console.log(data)
+const getSignUpList = () => {
+  getSignUpListByCompetitionId(props.id, props.isRaw ? 0 : 1).then((res) => {
+    const data = res.data
 
-  const { total, signUpList: _signUpList } = data || {}
-  signUpList.value = _signUpList.map(
-    ({
-      instructors,
-      member,
-      leader,
-      mode,
-      name,
-      id,
-      alreadyProcess,
-      currentRound,
-      award,
-      work,
-      video,
-    }: any) => {
-      if (alreadyProcess) {
-        scoreStatus.value[id] =
-          currentRound === props.curCompetitionRound ? 0 : 1
-      }
-      if (props.isLastRound) {
-        awardsStatus.value[id] = award
-      }
-      if (work) {
-        work = JSON.parse(work)
-      }
-      if (video) {
-        video = JSON.parse(video)
-      }
-      return {
-        member: [leader, ...JSON.parse(member || '[]')],
-        instructors: JSON.parse(instructors || '[]'),
+    const { total, signUpList: _signUpList } = data || {}
+    signUpList.value = _signUpList.map(
+      ({
+        instructors,
+        member,
+        leader,
         mode,
         name,
         id,
+        alreadyProcess,
+        currentRound,
         award,
         work,
         video,
-      }
-    },
-  )
-  signUpCount.value = total
+      }: any) => {
+        if (alreadyProcess) {
+          scoreStatus.value[id] =
+            currentRound === props.curCompetitionRound ? 0 : 1
+        }
+        if (props.isLastRound) {
+          awardsStatus.value[id] = award || (props.isRaw ? award : '')
+        }
+        if (work) {
+          work = JSON.parse(work)
+        }
+        if (video) {
+          video = JSON.parse(video)
+        }
+        return {
+          member: [leader, ...JSON.parse(member || '[]')],
+          instructors: JSON.parse(instructors || '[]'),
+          mode,
+          name,
+          id,
+          award,
+          work,
+          video,
+        }
+      },
+    )
+    signUpCount.value = total
+  })
+}
+
+getSignUpList()
+
+onMounted(() => {
+  emitter.on('signup-info-reload', getSignUpList)
+})
+
+onUnmounted(() => {
+  emitter.off('signup-info-reload', getSignUpList)
 })
 
 const statusChange = (
@@ -209,9 +221,13 @@ const statusChange = (
       // 晋级
     }
     // 发送网络请求
-    promoteSignUpBySignUpId(id, currentRound)
+    promoteSignUpBySignUpId(id, currentRound).then(
+      () => props.isRaw && emitter.emit('signup-info-reload'),
+    )
   } else {
-    awardSignUpBySignUpId(id, val as string)
+    awardSignUpBySignUpId(id, val as string).then(
+      () => props.isRaw && emitter.emit('signup-info-reload'),
+    )
   }
 }
 
@@ -275,6 +291,10 @@ const closeVideo = () => {
     top: 10%;
     font-size: 50px;
     cursor: pointer;
+    border-radius: 10px;
+    &:hover {
+      background-color: #a5a5a4;
+    }
   }
 
   .video {

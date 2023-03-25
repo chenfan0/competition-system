@@ -95,6 +95,7 @@
       <el-form-item label="预览视频">
         <el-upload
           v-model:file-list="videoFileList"
+          accept="video/*"
           :disabled="uploadDisable"
           name="video"
           :action="BASE_URL + '/upload/signup/video'"

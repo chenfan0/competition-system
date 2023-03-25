@@ -199,7 +199,7 @@ const tagInfo = computed<{
   const isCompetitionEnd = competitionStatus === CompetitionStatus.end
   let content!: string
   let type!: TagType
-  if (award) {
+  if (award && isCompetitionEnd) {
     content = props.award as string
     type = 'success'
   } else if (

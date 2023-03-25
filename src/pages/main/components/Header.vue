@@ -6,9 +6,10 @@
         :class="activeIndex === 0 ? 'active' : ''"
         @click="changePage(0, '/competition')"
       >
-        竞赛列表
+        {{ role !== UserRole.admin ? '竞赛列表' : '竞赛管理' }}
       </div>
       <div
+        v-if="role !== UserRole.admin"
         class="my-competition header-item"
         :class="activeIndex === 1 ? 'active' : ''"
         @click="changePage(1, '/my-competition')"
@@ -16,11 +17,20 @@
         我的竞赛
       </div>
       <div
+        v-if="[UserRole.admin, UserRole.teacher].includes(role)"
         class="release header-item"
         :class="activeIndex === 2 ? 'active' : ''"
         @click="changePage(2, '/release')"
       >
         发布竞赛
+      </div>
+      <div
+        v-if="role === UserRole.admin"
+        class="release header-item"
+        :class="activeIndex === 3 ? 'active' : ''"
+        @click="changePage(3, '/user-list')"
+      >
+        用户管理
       </div>
     </div>
     <div class="login header-item" @click="exist">
@@ -29,16 +39,19 @@
   </div>
 </template>
 <script setup lang="ts">
+import { UserRole } from '@/constant'
 import { useUserStore } from '@/store/user.store'
 const router = useRouter()
 const route = useRoute()
 
 const userStore = useUserStore()
+const role = userStore.userInfo.role
 
 const pathToActiveIndexMap = {
   '/competition': 0,
   '/my-competition': 1,
   '/release': 2,
+  '/user-list': 3,
 }
 
 const activeIndex = ref(
@@ -56,11 +69,7 @@ const changePage = (index: number, path?: string) => {
 
 const exist = () => {
   userStore.clear(['role', 'token'])
-  // userStore.
   location.assign('/login')
-  // router.push({
-  //   path: '/login',
-  // })
 }
 </script>
 <style scoped lang="less">

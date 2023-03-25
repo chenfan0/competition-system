@@ -31,14 +31,6 @@ const routes: Readonly<RouteRecordRaw[]> = [
         component: () =>
           import('@/pages/main/pages/my-competition/MyCompetition.vue'),
       },
-      {
-        path: '/release',
-        name: 'release',
-        component: () =>
-          import(
-            '@/pages/main/pages/release-competition/ReleaseCompetition.vue'
-          ),
-      },
     ],
   },
   {
@@ -52,6 +44,19 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+
+export const releaseRoute = {
+  path: '/release',
+  name: 'release',
+  component: () =>
+    import('@/pages/main/pages/release-competition/ReleaseCompetition.vue'),
+}
+
+export const userListRoute = {
+  path: '/user-list',
+  name: 'userList',
+  component: () => import('@/pages/main/pages/user-list/UserList.vue'),
+}
 
 router.beforeEach((to) => {
   const userStore = useUserStore()

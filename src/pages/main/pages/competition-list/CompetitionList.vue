@@ -48,12 +48,26 @@
         <CompetitionItem
           :class="index === competitionList.length - 1 ? 'last' : ''"
           :id="item.id"
-          :title="item.name"
+          :name="item.name"
           :level="item.level"
           :address="item.address"
           :sign-up-start-time="item.registrationStartTime"
           :sign-up-end-time="item.registrationEndTime"
           :status="item.status"
+          :show-score-btn="isAdmin"
+          :is-op-user="isAdmin"
+          :awards="item.awards"
+          :description="item.description"
+          :files="item.files"
+          :imgs="item.imgs"
+          :instructors-nums="item.instructorsNums"
+          :judges="item.judges"
+          :mode="item.mode"
+          :rounds="item.rounds"
+          :sign-up-nums="item.signUpNums"
+          :subscription="item.subscription"
+          :registration-time="item.registrationTime"
+          :work-submission-time="item.workSubmissionTime"
         />
       </template>
     </div>
@@ -82,7 +96,17 @@ import CompetitionItem from '@/components/CompetitionItem.vue'
 import Tag from '@/components/Tag.vue'
 import { useCompetitionListStore } from '@/store/competitionList.store'
 
-import { LevelOptions, StatusOptions, KeyTagToContentType } from '@/constant'
+import {
+  LevelOptions,
+  StatusOptions,
+  KeyTagToContentType,
+  UserRole,
+} from '@/constant'
+import { useUserStore } from '@/store/user.store'
+import { emitter } from '@/utils/bus'
+
+const userStore = useUserStore()
+const isAdmin = userStore.userInfo.role === UserRole.admin
 const competitionListStore = useCompetitionListStore()
 const { getCompetitionListDataAction } = competitionListStore
 const debounceGetCompetitionListData = debounce(
@@ -95,6 +119,18 @@ const { filterData, competitionList, paginationData, total } =
 onActivated(() => {
   // 发送网络请求
   debounceGetCompetitionListData('init')
+})
+
+const handleRequestCompetitionList = () => {
+  debounceGetCompetitionListData('init')
+}
+
+onMounted(() => {
+  emitter.on('reload-competition-list', handleRequestCompetitionList)
+})
+
+onUnmounted(() => {
+  emitter.off('reload-competition-list', handleRequestCompetitionList)
 })
 </script>
 <style scoped lang="less">

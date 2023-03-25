@@ -81,6 +81,7 @@ import {
 } from '@/network/competition'
 import { CompetitionStatus } from '@/constant'
 import { useUserStore } from '@/store/user.store'
+import { emitter } from '@/utils/bus'
 
 const router = useRouter()
 const route = useRoute()
@@ -128,16 +129,21 @@ const isWaitResultStatus = computed(
   () => competitionDetail.value.status === CompetitionStatus.waitResult,
 )
 
-getCompetitionDetail(id).then((res) => {
-  const { currentRound, name, mode, rounds, awards, status, opUser } = res.data
-  competitionDetail.value.currentRound = currentRound
-  competitionDetail.value.name = name
-  competitionDetail.value.mode = mode
-  competitionDetail.value.rounds = rounds.split('\n')
-  competitionDetail.value.awards = awards.split('\n')
-  competitionDetail.value.status = status
-  competitionDetail.value.opUser = opUser
-})
+const requestCompetitionDetail = () => {
+  getCompetitionDetail(id).then((res) => {
+    const { currentRound, name, mode, rounds, awards, status, opUser } =
+      res.data
+    competitionDetail.value.currentRound = currentRound
+    competitionDetail.value.name = name
+    competitionDetail.value.mode = mode
+    competitionDetail.value.rounds = rounds.split('\n')
+    competitionDetail.value.awards = awards.split('\n')
+    competitionDetail.value.status = status
+    competitionDetail.value.opUser = opUser
+  })
+}
+
+requestCompetitionDetail()
 
 const back = () => {
   router.back()
@@ -145,6 +151,8 @@ const back = () => {
 
 const setNextRound = () => {
   setCompetitionNextRound(Number(id))
+  requestCompetitionDetail()
+  emitter.emit('signup-info-reload')
 }
 </script>
 

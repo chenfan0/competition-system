@@ -53,6 +53,21 @@ export const useCompetitionListStore = defineStore(
           },
         )
         total.value = data.total as number
+        data.list.forEach((item: any) => {
+          item.registrationTime = [
+            item.registrationStartTime,
+            item.registrationEndTime,
+          ]
+          item.workSubmissionTime = [
+            item.workSubmissionStartTime,
+            item.workSubmissionEndTime,
+          ]
+          item.instructorsNums = JSON.parse(item.instructorsNums || '[]')
+          item.signUpNums = JSON.parse(item.signUpNums || '[]')
+          item.judges = JSON.parse(item.judges || '[]')
+          item.files = JSON.parse(item.files || '[]')
+          item.imgs = JSON.parse(item.imgs || '[]')
+        })
         competitionList.value = data.list
       } catch (e) {
         console.error(e)

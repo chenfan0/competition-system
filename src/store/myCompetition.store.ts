@@ -22,6 +22,7 @@ const RoleToTabPanelDataMap = {
     'judgementList',
     'releaseList',
   ],
+  2: ['releaseList'],
 } as { [key: number]: FieldType[] }
 
 export const useMyCompetitionStore = defineStore('myCompetitionStore', () => {
@@ -36,59 +37,10 @@ export const useMyCompetitionStore = defineStore('myCompetitionStore', () => {
     pageSize: 5,
   })
 
-  const filterCompetitionName = ref('')
-
-  const getMyCompetitionDataAction = async ({
-    currentPage,
-    pageSize,
-    field,
-  }: {
-    currentPage: number
-    pageSize: number
-    field: FieldType
-  }) => {
-    const role = useUserStore().userInfo.role
-    let getMyCompetitionDataRequest: (requestData: {
-      competitionName: string
-      offset: number
-      pageSize: number
-      field: string
-    }) => Promise<AxiosResponse<any, any>>
-    switch (role) {
-      case UserRole.student:
-        getMyCompetitionDataRequest = getSelfCompetition
-        break
-      case UserRole.teacher:
-        break
-      case UserRole.admin:
-        break
-    }
-    const { data } = await getMyCompetitionDataRequest!({
-      competitionName: filterCompetitionName.value,
-      offset: (currentPage - 1) * pageSize,
-      pageSize: pageSize,
-      field,
-    })
-    const keys = Object.keys(data)
-    for (const key of keys) {
-      data[key].rows.forEach((item: any) => {
-        item.instructors = JSON.parse(item.instructors || '[]')
-        item.member = JSON.parse(item.member || '[]')
-        item.rejectMember = JSON.parse(item.rejectMember || '[]')
-        item.resolveMember = JSON.parse(item.resolveMember || '[]')
-        item.totalMember = [item.leader, ...item.member, ...item.instructors]
-      })
-    }
-    myCompetitionData.value = data
-  }
-
   return {
     myCompetitionData,
     tabPanelData,
     activeName,
     paginationData,
-    filterCompetitionName,
-
-    getMyCompetitionDataAction,
   }
 })

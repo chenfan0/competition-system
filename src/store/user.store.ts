@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
+import { UserRole } from '../constant/index'
 import { login, register } from '@/network/login'
-
+import router, { releaseRoute, userListRoute } from '@/router'
 interface UserInfo {
   phone: string
   token: string
@@ -32,6 +33,12 @@ export const useUserStore = defineStore(
           userInfo.value[key as 'phone'] = val
         }
         userInfo.value.password = password
+        if ([UserRole.admin, UserRole.teacher].includes(userInfo.value.role)) {
+          router.addRoute('main', releaseRoute)
+        }
+        if (userInfo.value.role === UserRole.admin) {
+          router.addRoute('main', userListRoute)
+        }
       } catch (e) {
         console.error(e)
       }

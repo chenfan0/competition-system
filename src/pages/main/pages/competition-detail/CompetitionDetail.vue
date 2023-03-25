@@ -4,6 +4,18 @@
     <el-card shadow="hover" class="card">
       <Tag class="tag" :value="competitionDetail.status" />
       <div class="title">竞赛名称: {{ competitionDetail.name }}</div>
+      <el-carousel
+        :interval="4000"
+        class="carousel"
+        v-if="competitionDetail.imgs && competitionDetail.imgs.length"
+      >
+        <el-carousel-item v-for="item in competitionDetail.imgs" :key="item">
+          <el-image
+            :src="`${BASE_URL}/file/${item.filename}`"
+            style="width: 100%; height: 100%"
+          />
+        </el-carousel-item>
+      </el-carousel>
       <div class="detail layout">
         竞赛详情: {{ competitionDetail.description }}
       </div>
@@ -151,6 +163,7 @@ const processCompetitionDetailData = (data: any) => {
   // 数据处理
   ;[
     'files',
+    'imgs',
     'judges',
     'signUpNums',
     'instructorsNums',
@@ -167,6 +180,9 @@ const processCompetitionDetailData = (data: any) => {
   let btnDisable!: boolean
   let btnMsg!: string
   const curUser = userStore.userInfo.phone
+  data.files = data.files.map((file: any) => JSON.parse(file || '{}'))
+
+  data.imgs = data.imgs.map((img: any) => JSON.parse(img || '{}'))
   const { judges, opUser, leader } = data
   switch (data.status) {
     case CompetitionStatus.beforeSignUp:
@@ -196,11 +212,15 @@ const processCompetitionDetailData = (data: any) => {
   }
   btnMsg = btnMsg ?? (alreadySignUp ? '上传作品' : '报名')
 
-  if (curUser === opUser || judges.includes(curUser)) {
-    btnMsg = '查看报名信息'
-    btnDisable = false
-    shouldShowBtn.value = true
-  }
+  // if (curUser === opUser || judges.includes(curUser)) {
+  //   btnMsg = '查看报名信息'
+  //   btnDisable = false
+  //   shouldShowBtn.value = true
+  // }
+
+  // if (userStore.userInfo.role === UserRole.admin) {
+  //   shouldShowBtn.value = false
+  // }
 
   data.btnDisable = btnDisable
   data.btnMsg = btnMsg
@@ -252,17 +272,24 @@ const handleBtnClick = () => {
 
   .card {
     position: relative;
+    height: 70vh;
+    overflow: auto;
     margin-top: 10px;
     background-color: rgba(255, 255, 255, 0.4);
     font-size: 16px;
     color: #999;
-    padding: 0 10px 30px;
+    padding: 0 10px 40px;
     line-height: 22px;
     border-radius: 12px;
     .tag {
       position: absolute;
       top: 20px;
       right: 30px;
+    }
+
+    .carousel {
+      margin-bottom: 10px;
+      border-radius: 12px;
     }
 
     .layout {
@@ -297,7 +324,7 @@ const handleBtnClick = () => {
     .sign-up {
       position: absolute;
       right: 30px;
-      bottom: 20px;
+      // bottom: 20px;
     }
   }
   .file {

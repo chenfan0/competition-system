@@ -1,14 +1,6 @@
 <template>
   <div class="my-competition-wrapper">
     <el-tabs v-model="activeName" class="tabs" @tabChange="handleTabChange">
-      <div class="filter">
-        <span class="filter-field">竞赛名称: </span>
-        <el-input
-          clearable
-          class="filter-input"
-          v-model="filterCompetitionName"
-        />
-      </div>
       <el-tab-pane
         :label="LabelToContent[item]"
         :name="item"
@@ -16,10 +8,7 @@
         :key="item"
         :lazy="true"
       >
-        <MyCompetitionItem
-          :label="item"
-          :filterCompetitionName="filterCompetitionName"
-        />
+        <MyCompetitionItem :label="item" />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -33,8 +22,7 @@ import { LabelToContent } from '@/constant'
 import { emitter } from '@/utils/bus'
 
 const myCompetitionStore = useMyCompetitionStore()
-const { tabPanelData, activeName, filterCompetitionName } =
-  storeToRefs(myCompetitionStore)
+const { tabPanelData, activeName } = storeToRefs(myCompetitionStore)
 
 const handleTabChange = (label: TabPaneName) => {
   emitter.emit('reload-my-competition', label)
@@ -44,20 +32,6 @@ const handleTabChange = (label: TabPaneName) => {
 .my-competition-wrapper {
   .tabs {
     padding: 15px;
-  }
-
-  .filter {
-    display: flex;
-    margin: 10px 0 20px 0;
-    align-items: center;
-
-    .filter-field {
-      margin-right: 20px;
-    }
-
-    .filter-input {
-      width: 200px;
-    }
   }
 }
 </style>
