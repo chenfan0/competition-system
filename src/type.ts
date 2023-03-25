@@ -6,3 +6,4 @@ export type LabelType =
   | 'instructoringList'
   | 'judgementList'
   | 'releaseList'
+  | 'subscriptionList'

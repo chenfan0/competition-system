@@ -141,7 +141,11 @@ const handleDeleteSuccess = () => {
 const handleSubscription = () => {
   subscribe(id).then(() => {
     emitter.emit('reload-competition-list')
-    emitter.emit('reload-my-competition', ['releaseList', 'judgementList'])
+    emitter.emit('reload-my-competition', [
+      'releaseList',
+      'judgementList',
+      'subscriptionList',
+    ])
   })
 }
 </script>

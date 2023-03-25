@@ -11,7 +11,9 @@
   <div class="el-tab-pane-item" v-if="listData.list.length">
     <template v-for="(item, index) in listData.list" :key="item.id">
       <MyCompetitionListItem
-        v-if="label !== 'judgementList' && label !== 'releaseList'"
+        v-if="
+          !['judgementList', 'releaseList', 'subscriptionList'].includes(label)
+        "
         :class="index === listData.list.length - 1 ? 'last' : ''"
         :mode="item.mode"
         :sign-up-id="item.id"

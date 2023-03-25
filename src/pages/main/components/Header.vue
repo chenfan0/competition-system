@@ -33,12 +33,25 @@
         用户管理
       </div>
     </div>
-    <div class="login header-item" @click="exist">
-      {{ userStore.userInfo.phone }}
+    <div class="login header-item">
+      <el-dropdown>
+        <span class="el-dropdown-link">
+          用户: {{ userStore.userInfo.phone }}
+          <el-icon class="el-icon--right">
+            <arrow-down />
+          </el-icon>
+        </span>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="exist">退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
   </div>
 </template>
 <script setup lang="ts">
+import { ArrowDown } from '@element-plus/icons-vue'
 import { UserRole } from '@/constant'
 import { useUserStore } from '@/store/user.store'
 const router = useRouter()
@@ -104,9 +117,16 @@ const exist = () => {
   }
 
   .login {
+    display: flex;
+    align-items: center;
     &:hover {
       text-decoration: underline;
     }
+  }
+
+  .el-dropdown-link {
+    font-weight: 700;
+    color: #fff;
   }
 
   .active {

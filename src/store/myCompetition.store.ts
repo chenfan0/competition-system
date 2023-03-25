@@ -1,7 +1,4 @@
 import { defineStore } from 'pinia'
-import { AxiosResponse } from 'axios'
-import { UserRole } from '../constant/index'
-import { getSelfCompetition } from '../network/competition'
 import { useUserStore } from './user.store'
 
 type FieldType =
@@ -12,15 +9,17 @@ type FieldType =
   | 'instructoringList'
   | 'judgementList'
   | 'releaseList'
+  | 'subscriptionList'
 
 const RoleToTabPanelDataMap = {
-  0: ['signUpedList', 'signUpingList', 'confirmList'],
+  0: ['signUpedList', 'signUpingList', 'confirmList', 'subscriptionList'],
   1: [
     'instructoredList',
     'instructoringList',
     'confirmList',
     'judgementList',
     'releaseList',
+    'subscriptionList',
   ],
   2: ['releaseList'],
 } as { [key: number]: FieldType[] }
