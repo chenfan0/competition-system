@@ -57,10 +57,9 @@
       label="评分"
       align="center"
       width="150"
-      v-if="isWaitResultStatus && !isOpUser"
+      v-if="isWaitResultStatus && isJudge"
     >
       <template #default="scope">
-        <!-- {{ scope.row }} -->
         <el-select
           @change="(val: number) => statusChange('round', val, scope.row.id)"
           v-model="scoreStatus[scope.row.id]"
@@ -92,6 +91,8 @@
       :page-sizes="[5, 10, 20]"
       :default-current-page="paginationData.currentPage"
       :default-page-size="paginationData.pageSize"
+      @current-change="(val) => handlePageOrCurrentChange('current', val)"
+      @size-change="(val) => handlePageOrCurrentChange('size', val)"
     />
   </div>
   <div class="video-wrapper" v-if="showVideo">
@@ -106,10 +107,11 @@ import {
   promoteSignUpBySignUpId,
   awardSignUpBySignUpId,
 } from '@/network/signup'
-import { CompetitionMode, BASE_URL } from '@/constant'
+import { CompetitionMode, BASE_URL, AlreadyProcess } from '@/constant'
 import { downloadFile } from '@/utils'
 import { emitter } from '@/utils/bus'
 
+const emits = defineEmits(['processCompleted'])
 const props = defineProps<{
   id: number
   isRaw: boolean
@@ -119,7 +121,7 @@ const props = defineProps<{
   rounds: string[]
   awards: string[]
   isWaitResultStatus: boolean
-  isOpUser: boolean
+  isJudge: boolean
 }>()
 
 const showVideo = ref(false)
@@ -145,10 +147,24 @@ const signUpList = ref<
   }[]
 >([])
 
+const handlePageOrCurrentChange = (type: 'current' | 'size', val: number) => {
+  if (type === 'current') {
+    paginationData.value.currentPage = val
+  } else {
+    paginationData.value.pageSize = val
+  }
+  getSignUpList()
+}
+
 const signUpCount = ref<number>(0)
 
 const getSignUpList = () => {
-  getSignUpListByCompetitionId(props.id, props.isRaw ? 0 : 1).then((res) => {
+  getSignUpListByCompetitionId(
+    props.id,
+    props.isRaw ? AlreadyProcess.no : AlreadyProcess.yes,
+    paginationData.value.pageSize,
+    (paginationData.value.currentPage - 1) * paginationData.value.pageSize,
+  ).then((res) => {
     const data = res.data
 
     const { total, signUpList: _signUpList } = data || {}
@@ -192,6 +208,9 @@ const getSignUpList = () => {
       },
     )
     signUpCount.value = total
+    if (total === 0 && props.isRaw) {
+      emits('processCompleted')
+    }
   })
 }
 

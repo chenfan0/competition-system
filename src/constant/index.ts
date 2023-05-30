@@ -72,7 +72,9 @@ export const TagToType = {
 }
 
 export const BASE_URL =
-  env === 'development' ? 'http://localhost:8080' : 'http://81.71.36.158:11111'
+  SELF_ENV === 'development'
+    ? 'http://localhost:8080'
+    : 'http://81.71.36.158:11111'
 export const PREVIEW_URL_PREFIX = 'https://view.xdocin.com/view'
 
 export const LevelOptions = [
@@ -136,7 +138,7 @@ export const ModeOptions = [
   },
 ]
 
-export const PhoneReg = /^[1][3,4,5,7,8][0-9]{9}$/
+export const PhoneReg = /^1[3-9]\d{9}$/
 
 export enum UserRole {
   student = 0,

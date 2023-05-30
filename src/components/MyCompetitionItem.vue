@@ -53,7 +53,7 @@
         :sign-up-end-time="item.registrationEndTime"
         :sign-up-start-time="item.registrationEndTime"
         :status="item.status"
-        :show-score-btn="true"
+        :show-score-btn="label !== 'subscriptionList'"
         :is-op-user="item.opUser === user"
         :description="item.description"
         :instructors-nums="item.instructorsNums"
@@ -64,6 +64,7 @@
         :work-submission-time="item.workSubmissionTime"
         :sign-up-nums="item.signUpNums"
         :judges="item.judges"
+        :tags="item.tags"
         :files="item.files"
         :imgs="item.imgs"
       />
@@ -165,6 +166,7 @@ const getListData = debounce(
           item.instructorsNums = JSON.parse(item.instructorsNums || '[]')
           item.signUpNums = JSON.parse(item.signUpNums || '[]')
           item.judges = JSON.parse(item.judges || '[]')
+          item.tags = JSON.parse(item.tags || '[]')
           item.files = JSON.parse(item.files || '[]')
           item.imgs = JSON.parse(item.imgs || '[]')
         }

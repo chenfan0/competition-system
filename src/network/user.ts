@@ -13,3 +13,18 @@ export function updateUserIsDisable(user: string, isDisable: number) {
     },
   })
 }
+
+export function updateUserInterested(interested: number[]) {
+  return requestInstance.post({
+    url: '/user/update/interested',
+    data: {
+      interested,
+    },
+  })
+}
+
+export function getUserAwardList() {
+  return requestInstance.get({
+    url: '/user/award/list',
+  })
+}

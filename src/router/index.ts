@@ -5,9 +5,14 @@ const routes: Readonly<RouteRecordRaw[]> = [
   {
     path: '/',
     component: () => import('@/pages/main/Main.vue'),
-    redirect: () => ({ path: '/competition' }),
+    redirect: () => ({ path: '/home-page' }),
     name: 'main',
     children: [
+      {
+        path: '/home-page',
+        name: 'homePage',
+        component: () => import('@/pages/main/pages/home-page/HomePage.vue'),
+      },
       {
         path: '/competition',
         name: 'competition',
@@ -58,6 +63,11 @@ export const userListRoute = {
   component: () => import('@/pages/main/pages/user-list/UserList.vue'),
 }
 
+export const selfRoute = {
+  path: '/self',
+  name: 'self',
+  component: () => import('@/pages/main/pages/personal/Personal.vue'),
+}
 router.beforeEach((to) => {
   const userStore = useUserStore()
   const { token } = userStore.userInfo

@@ -25,6 +25,8 @@ export const useCompetitionListStore = defineStore(
       type: 'page' | 'size' | 'init' | 'name' | 'level' | 'status',
       newValue?: number,
     ) {
+      console.log('=========+++')
+
       switch (type) {
         case 'page':
           paginationData.value.currentPage = newValue!
@@ -65,6 +67,7 @@ export const useCompetitionListStore = defineStore(
           item.instructorsNums = JSON.parse(item.instructorsNums || '[]')
           item.signUpNums = JSON.parse(item.signUpNums || '[]')
           item.judges = JSON.parse(item.judges || '[]')
+          item.tags = JSON.parse(item.tags || '[]')
           item.files = JSON.parse(item.files || '[]')
           item.imgs = JSON.parse(item.imgs || '[]')
         })

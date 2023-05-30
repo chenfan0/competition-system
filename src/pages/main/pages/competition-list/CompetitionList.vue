@@ -62,6 +62,7 @@
           :imgs="item.imgs"
           :instructors-nums="item.instructorsNums"
           :judges="item.judges"
+          :tags="item.tags"
           :mode="item.mode"
           :rounds="item.rounds"
           :sign-up-nums="item.signUpNums"
@@ -122,6 +123,8 @@ onActivated(() => {
 })
 
 const handleRequestCompetitionList = () => {
+  console.log('init')
+
   debounceGetCompetitionListData('init')
 }
 

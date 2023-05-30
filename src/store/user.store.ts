@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
-import { UserRole } from '../constant/index'
+import { UserRole, BASE_URL } from '../constant/index'
 import { login, register } from '@/network/login'
-import router, { releaseRoute, userListRoute } from '@/router'
+import router, { releaseRoute, userListRoute, selfRoute } from '@/router'
+import { updateUserInterested } from '@/network/user'
 interface UserInfo {
   phone: string
   token: string
   role: number
   password: string
+  interested: number[]
+  avatar: string
 }
 
 const defaultUserInfo = {
@@ -14,6 +17,8 @@ const defaultUserInfo = {
   token: '',
   role: -1,
   password: '',
+  interested: [],
+  avatar: '',
 }
 
 export const useUserStore = defineStore(
@@ -26,6 +31,7 @@ export const useUserStore = defineStore(
           data: any
           code: number
         }
+
         if (code !== 200) return
         const keys = Object.keys(data) as (keyof UserInfo)[]
         for (const key of keys) {
@@ -33,9 +39,15 @@ export const useUserStore = defineStore(
           userInfo.value[key as 'phone'] = val
         }
         userInfo.value.password = password
+        userInfo.value.avatar = `${BASE_URL}/file/${data.avatar}`
         if ([UserRole.admin, UserRole.teacher].includes(userInfo.value.role)) {
           router.addRoute('main', releaseRoute)
         }
+
+        if (userInfo.value.role !== UserRole.admin) {
+          router.addRoute('main', selfRoute)
+        }
+
         if (userInfo.value.role === UserRole.admin) {
           router.addRoute('main', userListRoute)
         }
@@ -58,14 +70,28 @@ export const useUserStore = defineStore(
       phone: string,
       password: string,
       role: number,
+      sCode: string,
     ) {
-      await register(phone, password, role)
+      return await register(phone, password, role, sCode)
+    }
+
+    async function updateInterestedAction(newInterested: number[]) {
+      updateUserInterested(newInterested).then(() => {
+        userInfo.value.interested = newInterested
+      })
+    }
+
+    async function updateAvatarAction(avatar: string) {
+      userInfo.value.avatar = `${BASE_URL}/file/${avatar}`
     }
 
     return {
       userInfo,
+
       loginAction,
       registerAction,
+      updateInterestedAction,
+      updateAvatarAction,
       clear,
     }
   },

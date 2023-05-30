@@ -11,7 +11,6 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import Bg from '@/components/Bg.vue'
 const { appContext } = getCurrentInstance()!
 ElMessage({}, appContext).close()
-// ElMessageBox({}, appContext)
 </script>
 <style scoped lang="less">
 :global(:root) {

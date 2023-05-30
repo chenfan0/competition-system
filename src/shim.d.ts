@@ -5,4 +5,6 @@ declare module '*.vue' {
 declare module 'element-plus/dist/locale/zh-cn.mjs' {
   export default any
 }
-declare const env: string
+declare const SELF_ENV: string
+
+declare module 'vue3-markdown-it'

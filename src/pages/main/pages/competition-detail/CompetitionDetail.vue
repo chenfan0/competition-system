@@ -17,7 +17,7 @@
         </el-carousel-item>
       </el-carousel>
       <div class="detail layout">
-        竞赛详情: {{ competitionDetail.description }}
+        <Markdown :source="competitionDetail.description" />
       </div>
       <div class="address layout">
         竞赛地点: {{ competitionDetail.address }}
@@ -59,16 +59,26 @@
         评委:
         {{ competitionDetail.judges?.join(', ') }}
       </div>
-      <el-button
-        type="primary"
-        class="sign-up"
-        size="large"
-        @click="handleBtnClick"
-        :disabled="competitionDetail.btnDisable"
-        v-if="shouldShowBtn"
-      >
-        {{ competitionDetail.btnMsg }}
-      </el-button>
+      <div class="tags layout">
+        竞赛标签:
+        {{ competitionDetail.tags?.join(', ') }}
+      </div>
+      <div class="sign-up-wrapper">
+        <el-tooltip effect="dark" :content="btnToolTipContent" placement="top">
+          <div>
+            <el-button
+              type="primary"
+              class="sign-up"
+              size="large"
+              @click="handleBtnClick"
+              :disabled="competitionDetail.btnDisable"
+              v-if="shouldShowBtn"
+            >
+              {{ competitionDetail.btnMsg }}
+            </el-button>
+          </div>
+        </el-tooltip>
+      </div>
     </el-card>
     <!-- 查看文件dialog -->
     <el-dialog v-model="fileDialogVisible" title="竞赛相关文件">
@@ -78,7 +88,7 @@
           <a
             class="filename"
             :href="`https://view.xdocin.com/view?src=${encodeURIComponent(
-              `${BASE_URL}/file/${item.filename}`,
+              `http://www.chenfan.co:11111/file/${item.filename}`,
             )}`"
             target="_blank"
           >
@@ -127,6 +137,7 @@
 </template>
 <script setup lang="ts">
 import { Document, Download } from '@element-plus/icons-vue'
+import Markdown from 'vue3-markdown-it'
 import { getCompetitionDetail } from '@/network/competition'
 import Tag from '@/components/Tag.vue'
 import {
@@ -152,6 +163,7 @@ const fileDialogVisible = ref(false)
 const showSignUpForm = ref(false)
 
 const signUpDialogVisible = ref(false)
+const btnToolTipContent = ref('')
 
 // 0 代表可以报名，还未可以上传文件
 // 1 代表可以报名也可以上传或修改文件
@@ -181,19 +193,27 @@ const processCompetitionDetailData = (data: any) => {
   let btnMsg!: string
   const curUser = userStore.userInfo.phone
   data.files = data.files.map((file: any) => JSON.parse(file || '{}'))
+  data.description = `竞赛详情: ${data.description}`
 
   data.imgs = data.imgs.map((img: any) => JSON.parse(img || '{}'))
-  const { judges, opUser, leader } = data
+  const { leader } = data
   switch (data.status) {
     case CompetitionStatus.beforeSignUp:
       btnDisable = true
       btnMsg = '报名'
+      btnToolTipContent.value = '当前竞赛还未开始'
       break
     case CompetitionStatus.signUping:
       btnDisable = alreadySignUp
+      btnToolTipContent.value = alreadySignUp ? '你已报名过该竞赛' : '报名'
       break
     case CompetitionStatus.waitUpload:
       btnDisable = alreadySignUp ? true : canSignUp ? false : true
+      btnToolTipContent.value = alreadySignUp
+        ? '你已经报名过该竞赛'
+        : canSignUp
+        ? '报名'
+        : '报名时间已过'
       break
     case CompetitionStatus.uploading:
       canUpdateSignUpMode.value = canSignUp ? 1 : 2
@@ -204,23 +224,23 @@ const processCompetitionDetailData = (data: any) => {
         : canSignUp
         ? false
         : true
+      btnToolTipContent.value = alreadySignUp
+        ? leader === curUser // 已经报名了，必须是报名队长才可以进行上传作品
+          ? '上传作品'
+          : '不是报名发起者，无法提交作品'
+        : canSignUp
+        ? '报名'
+        : '报名时间已过'
       break
     case CompetitionStatus.waitResult:
     case CompetitionStatus.end:
       btnDisable = true
+      btnToolTipContent.value = alreadySignUp
+        ? '上传作品时间已过'
+        : '报名时间已过'
       break
   }
   btnMsg = btnMsg ?? (alreadySignUp ? '上传作品' : '报名')
-
-  // if (curUser === opUser || judges.includes(curUser)) {
-  //   btnMsg = '查看报名信息'
-  //   btnDisable = false
-  //   shouldShowBtn.value = true
-  // }
-
-  // if (userStore.userInfo.role === UserRole.admin) {
-  //   shouldShowBtn.value = false
-  // }
 
   data.btnDisable = btnDisable
   data.btnMsg = btnMsg
@@ -250,8 +270,6 @@ const handleBtnClick = () => {
     })
   }
 }
-
-// const handleOnConfirmUpload = () => {}
 </script>
 <style scoped lang="less">
 .detail-wrapper {
@@ -278,7 +296,7 @@ const handleBtnClick = () => {
     background-color: rgba(255, 255, 255, 0.4);
     font-size: 16px;
     color: #999;
-    padding: 0 10px 40px;
+    padding: 0 10px 0px;
     line-height: 22px;
     border-radius: 12px;
     .tag {
@@ -321,10 +339,9 @@ const handleBtnClick = () => {
       }
     }
 
-    .sign-up {
-      position: absolute;
-      right: 30px;
-      // bottom: 20px;
+    .sign-up-wrapper {
+      display: flex;
+      justify-content: flex-end;
     }
   }
   .file {

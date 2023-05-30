@@ -2,35 +2,50 @@
   <div class="header">
     <div class="header-left">
       <div
-        class="competition header-item"
+        class="header-item"
         :class="activeIndex === 0 ? 'active' : ''"
-        @click="changePage(0, '/competition')"
+        @click="changePage(0, '/home-page')"
+      >
+        首页
+      </div>
+      <div
+        class="competition header-item"
+        :class="activeIndex === 1 ? 'active' : ''"
+        @click="changePage(1, '/competition')"
       >
         {{ role !== UserRole.admin ? '竞赛列表' : '竞赛管理' }}
       </div>
       <div
         v-if="role !== UserRole.admin"
         class="my-competition header-item"
-        :class="activeIndex === 1 ? 'active' : ''"
-        @click="changePage(1, '/my-competition')"
+        :class="activeIndex === 2 ? 'active' : ''"
+        @click="changePage(2, '/my-competition')"
       >
         我的竞赛
       </div>
       <div
         v-if="[UserRole.admin, UserRole.teacher].includes(role)"
         class="release header-item"
-        :class="activeIndex === 2 ? 'active' : ''"
-        @click="changePage(2, '/release')"
+        :class="activeIndex === 3 ? 'active' : ''"
+        @click="changePage(3, '/release')"
       >
         发布竞赛
       </div>
       <div
         v-if="role === UserRole.admin"
         class="release header-item"
-        :class="activeIndex === 3 ? 'active' : ''"
-        @click="changePage(3, '/user-list')"
+        :class="activeIndex === 4 ? 'active' : ''"
+        @click="changePage(4, '/user-list')"
       >
         用户管理
+      </div>
+      <div
+        class="self header-item"
+        v-if="role !== UserRole.admin"
+        :class="activeIndex === 5 ? 'active' : ''"
+        @click="changePage(5, '/self')"
+      >
+        个人主页
       </div>
     </div>
     <div class="login header-item">
@@ -54,6 +69,7 @@
 import { ArrowDown } from '@element-plus/icons-vue'
 import { UserRole } from '@/constant'
 import { useUserStore } from '@/store/user.store'
+import { emitter } from '@/utils/bus'
 const router = useRouter()
 const route = useRoute()
 
@@ -61,16 +77,31 @@ const userStore = useUserStore()
 const role = userStore.userInfo.role
 
 const pathToActiveIndexMap = {
-  '/competition': 0,
-  '/my-competition': 1,
-  '/release': 2,
-  '/user-list': 3,
+  '/home-page': 0,
+  '/competition': 1,
+  '/my-competition': 2,
+  '/release': 3,
+  '/user-list': 4,
+  '/self': 5,
 }
 
 const activeIndex = ref(
   pathToActiveIndexMap[route.fullPath as keyof typeof pathToActiveIndexMap] ??
-    1,
+    0,
 )
+
+const handleChangeHeaderActive = (index: number) => {
+  activeIndex.value = index
+}
+
+onMounted(() => {
+  emitter.on('change-header-active', handleChangeHeaderActive as any)
+})
+
+onUnmounted(() => {
+  emitter.off('change-header-active', handleChangeHeaderActive as any)
+})
+
 const changePage = (index: number, path?: string) => {
   activeIndex.value = index
   if (path) {

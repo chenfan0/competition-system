@@ -59,6 +59,7 @@
         :work-submission-time="workSubmissionTime"
         :sign-up-nums="signUpNums"
         :judges="judges"
+        :tags="tags"
         :files="files"
         :id="id"
         :imgs="imgs"
@@ -99,6 +100,7 @@ const { name, level, address, signUpStartTime, signUpEndTime, status, id } =
     workSubmissionTime?: string[]
     signUpNums?: number[]
     judges?: string[]
+    tags?: number[]
     files?: string[]
     signUpStartTime: string
     signUpEndTime: string
@@ -134,13 +136,16 @@ const handleUpdateSuccess = () => {
 }
 const handleDeleteSuccess = () => {
   updateVisible.value = false
-  emitter.emit('reload-my-competition', ['releaseList'])
+  console.log('deleteSuccess')
   emitter.emit('reload-competition-list')
+
+  emitter.emit('reload-my-competition', ['releaseList'])
 }
 
 const handleSubscription = () => {
   subscribe(id).then(() => {
     emitter.emit('reload-competition-list')
+    emitter.emit('reload-recommend-list')
     emitter.emit('reload-my-competition', [
       'releaseList',
       'judgementList',

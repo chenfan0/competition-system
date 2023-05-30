@@ -76,3 +76,33 @@ export function setCompetitionNextRound(competitionId: number) {
     },
   })
 }
+
+export function getCompetitionRecommend() {
+  return requestInstance.get({
+    url: '/competition/recommend',
+  })
+}
+
+export function getCompetitionLevelData() {
+  return requestInstance.get({
+    url: '/competition/level',
+  })
+}
+
+export function getCompetitionStatusData() {
+  return requestInstance.get({
+    url: '/competition/status',
+  })
+}
+
+export function getCompetitionTagData() {
+  return requestInstance.get({
+    url: '/competition/tag',
+  })
+}
+
+export function getAwardExcel(id: number) {
+  return requestInstance.get({
+    url: `/competition/excel?competitionId=${id}`,
+  })
+}

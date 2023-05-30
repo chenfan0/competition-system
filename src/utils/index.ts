@@ -3,7 +3,7 @@ import { useUserStore } from '../store/user.store'
 import { storage } from './localstorage'
 import { BASE_URL } from '@/constant'
 import { UserRole } from '@/constant/index'
-import router, { releaseRoute, userListRoute } from '@/router'
+import router, { releaseRoute, userListRoute, selfRoute } from '@/router'
 
 export async function downloadFile(filename: string, originalname: string) {
   const userStore = useUserStore()
@@ -29,6 +29,9 @@ export function processReleaseRouter() {
   const role = userStore.userInfo?.role
   if ([UserRole.teacher, UserRole.admin].includes(role)) {
     router.addRoute('main', releaseRoute)
+  }
+  if (role !== UserRole.admin) {
+    router.addRoute('main', selfRoute)
   }
 
   if (role === UserRole.admin) {

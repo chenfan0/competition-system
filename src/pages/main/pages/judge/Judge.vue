@@ -21,7 +21,7 @@
     <el-tabs
       v-model="activeName"
       class="demo-tabs"
-      v-if="isWaitResultStatus && !isOpUser"
+      v-if="isWaitResultStatus && isJudge"
     >
       <el-tab-pane label="待处理" name="raw" lazy>
         <JudgeItem
@@ -33,7 +33,8 @@
           :is-raw="true"
           :awards="competitionDetail.awards"
           :is-wait-result-status="isWaitResultStatus"
-          :is-op-user="isOpUser"
+          :is-judge="isJudge"
+          @process-completed="handleProcessCompleted"
         />
       </el-tab-pane>
       <el-tab-pane label="已处理" name="process" lazy>
@@ -46,7 +47,7 @@
           :is-raw="false"
           :awards="competitionDetail.awards"
           :is-wait-result-status="isWaitResultStatus"
-          :is-op-user="isOpUser"
+          :is-judge="isJudge"
         />
       </el-tab-pane>
     </el-tabs>
@@ -60,26 +61,42 @@
       :is-raw="true"
       :awards="competitionDetail.awards"
       :is-wait-result-status="isWaitResultStatus"
-      :is-op-user="isOpUser"
+      :is-judge="isJudge"
     />
-    <el-button
-      class="next-btn"
-      type="primary"
-      @click="setNextRound"
-      v-if="isWaitResultStatus && !isOpUser"
-    >
-      {{ isLastRound ? '公布结果' : `进入${nextRound}` }}
-    </el-button>
+    <el-tooltip effect="dark" placement="top" :content="tooltipContent">
+      <div class="next-btn">
+        <el-button
+          type="primary"
+          @click="setNextRound"
+          :disabled="!processCompleted"
+          v-if="isWaitResultStatus && isJudge"
+        >
+          {{ isLastRound ? '公布结果' : `进入${nextRound}` }}
+        </el-button>
+      </div>
+    </el-tooltip>
+    <div class="export-btn">
+      <el-button
+        type="primary"
+        @click="getAwardFile"
+        :disabled="!processCompleted"
+        v-if="isJudge"
+      >
+        导出名单
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import axios from 'axios'
+import { Action } from 'element-plus'
 import JudgeItem from './components/JudgeItem.vue'
 import {
   getCompetitionDetail,
   setCompetitionNextRound,
 } from '@/network/competition'
-import { CompetitionStatus } from '@/constant'
+import { BASE_URL, CompetitionStatus } from '@/constant'
 import { useUserStore } from '@/store/user.store'
 import { emitter } from '@/utils/bus'
 
@@ -98,6 +115,7 @@ const competitionDetail = ref<{
   awards: string[]
   status: number
   opUser?: string
+  judges: string[]
 }>({
   name: '',
   rounds: [],
@@ -105,9 +123,13 @@ const competitionDetail = ref<{
   mode: '',
   awards: [],
   status: 0,
+  judges: [],
 })
-const isOpUser = computed(
-  () => userStore.userInfo.phone === competitionDetail.value.opUser,
+
+const processCompleted = ref(false)
+
+const isJudge = computed(() =>
+  competitionDetail.value.judges.includes(userStore.userInfo.phone),
 )
 const nextRound = computed(() => {
   const index = competitionDetail.value.rounds.indexOf(
@@ -125,13 +147,15 @@ const isLastRound = computed(() => {
   }
   return false
 })
+
+const tooltipContent = ref(`存在未处理的报名信息，无法进行该操作`)
 const isWaitResultStatus = computed(
   () => competitionDetail.value.status === CompetitionStatus.waitResult,
 )
 
 const requestCompetitionDetail = () => {
   getCompetitionDetail(id).then((res) => {
-    const { currentRound, name, mode, rounds, awards, status, opUser } =
+    const { currentRound, name, mode, rounds, awards, status, opUser, judges } =
       res.data
     competitionDetail.value.currentRound = currentRound
     competitionDetail.value.name = name
@@ -140,6 +164,7 @@ const requestCompetitionDetail = () => {
     competitionDetail.value.awards = awards.split('\n')
     competitionDetail.value.status = status
     competitionDetail.value.opUser = opUser
+    competitionDetail.value.judges = JSON.parse(judges || '[]') as string[]
   })
 }
 
@@ -148,11 +173,49 @@ requestCompetitionDetail()
 const back = () => {
   router.back()
 }
-
 const setNextRound = () => {
-  setCompetitionNextRound(Number(id))
-  requestCompetitionDetail()
-  emitter.emit('signup-info-reload')
+  ElMessageBox.alert(
+    isLastRound.value ? '确认公布结果?' : `确认进入${nextRound.value}`,
+    '请确认',
+    {
+      confirmButtonText: '确认',
+      closeOnClickModal: true,
+      callback: async (action: Action) => {
+        if (action === 'confirm') {
+          try {
+            setCompetitionNextRound(Number(id))
+            requestCompetitionDetail()
+            emitter.emit('signup-info-reload')
+          } catch (e) {
+            console.log(e)
+          }
+        }
+      },
+    },
+  )
+}
+
+const getAwardFile = async () => {
+  const { data } = await axios.get(
+    `${BASE_URL}/competition/excel?competitionId=${id}}`,
+    {
+      headers: {
+        Authorization: `Bearer ${userStore.userInfo.token}`,
+      },
+      responseType: 'blob',
+    },
+  )
+
+  const blob = new Blob([data])
+  const a = document.createElement('a') as HTMLAnchorElement
+  a.href = URL.createObjectURL(blob)
+  a.download = `${competitionDetail.value.name}.xlsx`
+  a.click()
+}
+
+const handleProcessCompleted = () => {
+  processCompleted.value = true
+  tooltipContent.value = isLastRound ? '公布结果' : `进入${nextRound.value}`
 }
 </script>
 
@@ -197,6 +260,12 @@ const setNextRound = () => {
   .next-btn {
     position: absolute;
     top: 80px;
+    right: 30px;
+  }
+
+  .export-btn {
+    position: absolute;
+    top: 20px;
     right: 30px;
   }
 

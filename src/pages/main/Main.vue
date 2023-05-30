@@ -3,7 +3,9 @@
     <Header />
 
     <RouterView v-slot="{ Component }">
-      <KeepAlive include="CompetitionList,ReleaseCompetition,MyCompetition">
+      <KeepAlive
+        include="CompetitionList,ReleaseCompetition,MyCompetition,HomePage"
+      >
         <component :is="Component"></component>
       </KeepAlive>
     </RouterView>

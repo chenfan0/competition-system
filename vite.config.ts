@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import viteCompression from 'vite-plugin-compression'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   return {
@@ -19,7 +20,10 @@ export default defineConfig(({ mode }) => {
       }),
       Components({
         resolvers: [ElementPlusResolver()],
+
+        dts: true,
       }),
+      viteCompression(),
     ],
     resolve: {
       alias: {
@@ -27,7 +31,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      env: JSON.stringify(mode),
+      SELF_ENV: JSON.stringify(mode),
     },
   }
 })

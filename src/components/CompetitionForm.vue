@@ -51,6 +51,7 @@
           placeholder="默认一轮，如果多轮请填写每轮名称，并通过回车键分割，例如初赛(回车)复赛"
           autosize
           type="textarea"
+          :disabled="type === 'update'"
         />
       </el-form-item>
       <el-form-item label="奖项名称" prop="awards">
@@ -70,6 +71,7 @@
           range
           show-stops
           :max="5"
+          :disabled="type === 'update'"
         />
       </el-form-item>
       <el-form-item label="参赛模式" prop="mode">
@@ -77,6 +79,7 @@
           class="field-value"
           placeholder="请选择参赛模式"
           v-model="competitionData.mode"
+          :disabled="type === 'update'"
         >
           <el-option
             v-for="item in ModeOptions"
@@ -97,6 +100,7 @@
           show-stops
           :min="2"
           :max="15"
+          :disabled="type === 'update'"
         />
       </el-form-item>
       <el-form-item label="报名时间段" prop="registrationTime">
@@ -132,7 +136,23 @@
           v-model="competitionData.judges"
         >
           <el-option
-            v-for="item in judgesList"
+            v-for="item in judgeList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="竞赛标签" prop="tags">
+        <el-select
+          class="field-value"
+          placeholder="请添加相关标签"
+          multiple
+          filterable
+          v-model="competitionData.tags"
+        >
+          <el-option
+            v-for="item in tagStore.tagList"
             :key="item.value"
             :label="item.label"
             :value="item.value"
@@ -219,6 +239,7 @@ import {
 } from '@/constant'
 import { useCompetitionListStore } from '@/store/competitionList.store'
 import { useUserStore } from '@/store/user.store'
+import { useTagStore } from '@/store/tag.store'
 
 const emits = defineEmits(['updateSuccess', 'createSuccess', 'deleteSuccess'])
 const props = defineProps<{
@@ -235,12 +256,14 @@ const props = defineProps<{
   workSubmissionTime?: string[]
   signUpNums?: number[]
   judges?: string[]
+  tags?: number[]
   files?: string[]
   imgs?: string[]
   type: 'create' | 'update'
 }>()
 
 const competitionStore = useCompetitionListStore()
+const tagStore = useTagStore()
 const router = useRouter()
 
 const uploadRef = ref<UploadInstance>()
@@ -262,9 +285,11 @@ const competitionData = ref({
   workSubmissionTime: (props.workSubmissionTime || undefined) as any,
   signUpNums: props.signUpNums || [2, 4],
   judges: props.judges || ([] as string[]),
+  tags: props.tags || ([] as number[]),
   files: [] as string[],
   imgs: [] as string[],
 })
+
 const fileList = ref(
   props.files?.map((file) => {
     const _file = JSON.parse(file)
@@ -286,7 +311,7 @@ const imgList = ref(
   }),
 )
 
-const judgesList = ref<{ label: string; value: string }[]>([])
+const judgeList = ref<{ label: string; value: string }[]>([])
 
 const formRule: FormRules = {
   name: { required: true, trigger: 'blur', message: '竞赛名称是必须填写的' },
@@ -338,6 +363,11 @@ const formRule: FormRules = {
     required: true,
     trigger: 'blur',
     message: '评委是必须提供的',
+  },
+  tags: {
+    required: true,
+    trigger: 'blur',
+    message: '竞赛标签是必须提供的',
   },
 
   rounds: {
@@ -426,7 +456,7 @@ const handleDeleteCompetition = () => {
 const handleCompetitionJudges = async (prefix: string) => {
   const list = await competitionStore.getCompetitionJudgesAction(prefix)
 
-  judgesList.value = list.filter(
+  judgeList.value = list.filter(
     (user: { label: string; value: string }) => user.value !== phone,
   )
 }
@@ -455,6 +485,8 @@ const handleError: UploadProps['onError'] = (error) => {
     message: error.message,
   })
 }
+// 获取tag
+tagStore.getTagListAction()
 </script>
 <style scoped lang="less">
 .card {

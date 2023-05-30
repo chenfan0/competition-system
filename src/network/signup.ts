@@ -47,9 +47,11 @@ export function deleteSignUp(signUpId: number) {
 export function getSignUpListByCompetitionId(
   competitionId: number,
   alreadyProcess: number,
+  pageSize: number,
+  offset: number,
 ) {
   return requestInstance.get({
-    url: `/signup/${competitionId}?alreadyProcess=${alreadyProcess}`,
+    url: `/signup/${competitionId}?alreadyProcess=${alreadyProcess}&pageSize=${pageSize}&offset=${offset}`,
   })
 }
 

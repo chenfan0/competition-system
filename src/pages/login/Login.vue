@@ -69,6 +69,36 @@
                 placeholder="请确认密码"
               />
             </el-form-item>
+            <el-form-item prop="captcha">
+              <div class="captcha">
+                <div
+                  style="cursor: pointer; margin-right: 10px"
+                  v-html="svg"
+                  @click="handleChangeCaptcha"
+                />
+                <el-input
+                  placeholder="请输入验证码"
+                  style="height: 32px"
+                  v-model="registerForm.captcha"
+                />
+              </div>
+            </el-form-item>
+            <el-form-item prop="sCode">
+              <div class="s-captcha">
+                <el-input
+                  placeholder="请输入短信验证码"
+                  v-model="registerForm.sCode"
+                />
+                <el-button
+                  type="primary"
+                  style="margin-left: 10px"
+                  :disabled="sendSmsDisable"
+                  @click="handleSendMessage"
+                >
+                  {{ sendSmsBtnMsg }}
+                </el-button>
+              </div>
+            </el-form-item>
             <el-form-item prop="role">
               <el-radio-group v-model="registerForm.role" class="radio">
                 <el-radio :label="0" size="large">学生</el-radio>
@@ -101,6 +131,7 @@ import { FormInstance, FormRules } from 'element-plus'
 
 import { useUserStore } from '@/store/user.store'
 import { PhoneReg, whiteUserList } from '@/constant'
+import { getCaptcha, getSCaptcha } from '@/network/login'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -112,6 +143,13 @@ const loginForm = ref({
   phone: userStore.userInfo.phone,
   password: userStore.userInfo.password,
 })
+
+const svg = ref<string>('')
+const svgText = ref<string>('')
+const sendSmsDisable = ref(true)
+const sendSmsBtnMsg = ref<string | number>('发送验证码')
+const countdown = ref(60)
+const intervalId = ref<number | null>(null)
 
 const loginRule: FormRules = {
   phone: [
@@ -153,6 +191,8 @@ const registerForm = ref({
   password: '',
   confirmPassword: '',
   role: 0,
+  captcha: '',
+  sCode: '',
 })
 
 const registerRule: FormRules = {
@@ -166,6 +206,23 @@ const registerRule: FormRules = {
     },
     message: '密码不一致',
   },
+  captcha: {
+    trigger: 'change',
+    validator(_, value: string) {
+      if (value.toLocaleLowerCase() === svgText.value.toLocaleLowerCase()) {
+        sendSmsDisable.value = false
+        return true
+      }
+      sendSmsDisable.value = true
+      return false
+    },
+    message: '验证码错误',
+  },
+  sCode: {
+    required: true,
+    trigger: 'blur',
+    message: '短信验证码不能为空',
+  },
 }
 
 const handleLoginOrRegister = (type: 'login' | 'register') => {
@@ -176,6 +233,12 @@ const handleLoginOrRegister = (type: 'login' | 'register') => {
     registerForm.value.password = ''
     registerForm.value.confirmPassword = ''
     registerForm.value.role = 0
+    registerForm.value.captcha = ''
+    registerForm.value.sCode = ''
+    clearInterval(intervalId.value!)
+    countdown.value = 60
+    sendSmsBtnMsg.value = '发送验证码'
+    sendSmsDisable.value = false
   } else {
     isLogin.value = false
     loginForm.value.phone = ''
@@ -199,12 +262,62 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   try {
     await registerRef.value!.validate()
-    const { phone, password, role } = registerForm.value
-    userStore.registerAction(phone, password, role)
+    const { phone, password, role, sCode } = registerForm.value
+    userStore.registerAction(phone, password, role, sCode).then((res: any) => {
+      if (res.code === 200) {
+        console.log('====')
+
+        handleLoginOrRegister('login')
+      }
+    })
   } catch (e) {
     console.error(e)
   }
 }
+
+const handleSendMessage = () => {
+  if (!PhoneReg.test(registerForm.value.phone)) {
+    ElMessage.error({
+      message: '无效的手机号',
+    })
+    return
+  }
+  getSCaptcha(registerForm.value.phone)
+  intervalId.value = handleCountdown()
+  sendSmsDisable.value = true
+}
+
+const requestCaptcha = () => {
+  getCaptcha().then((res) => {
+    const data = res.data
+    svg.value = data.data
+    svgText.value = data.text
+  })
+}
+requestCaptcha()
+const handleChangeCaptcha = () => {
+  requestCaptcha()
+}
+
+const handleCountdown = () => {
+  const id = setInterval(() => {
+    countdown.value -= 1
+    sendSmsBtnMsg.value = `${countdown.value}秒后重新发送`
+    if (countdown.value === 0) {
+      countdown.value = 60
+      sendSmsBtnMsg.value = '发送验证码'
+      sendSmsDisable.value = false
+      clearInterval(id)
+    }
+  }, 1000)
+  return id
+}
+
+onUnmounted(() => {
+  if (intervalId.value) {
+    clearInterval(intervalId.value)
+  }
+})
 </script>
 
 <style scoped lang="less">
@@ -231,6 +344,17 @@ const handleRegister = async () => {
         margin-top: 40px;
       }
 
+      .captcha,
+      .s-captcha {
+        display: flex;
+        margin-bottom: 5px;
+        align-items: center;
+      }
+
+      .s-captcha {
+        width: 100%;
+      }
+
       .radio {
         display: flex;
         justify-content: space-around;
@@ -241,7 +365,7 @@ const handleRegister = async () => {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin: 30px 0 5px 0;
+        margin: 0px 0 5px 0;
 
         .login-btn,
         .register-btn {
